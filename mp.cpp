@@ -1,5 +1,6 @@
 #include <iostream>
-
+#include <vector>
+#include <iterator>
 
 namespace xpr
 {
@@ -37,16 +38,15 @@ namespace xpr
 }
 
 
-namespace tl
+namespace ttt
 {
-  struct Null {};
-
   struct False { enum {value = false}; };
   struct True { enum {value = true}; };
 
   template<class A, class B> struct Equal : False {};
   template<class A> struct Equal<A,A> : True {};
 
+  struct Null {};
 
   template<class T, class Q> struct List
   {
@@ -54,6 +54,8 @@ namespace tl
     typedef Q Queue;
   };
 
+  template<class A = Null, class B = Null, class C = Null, class D = Null, class E = Null, class F = Null> struct MakeTL : List<A,List<B,List<C,List<D,List<E,List<F,Null>>>>>> {};
+  
   template<class TL> struct Size
   {
     enum { value = Size< typename TL::Queue >::value + 1 };
@@ -78,10 +80,6 @@ namespace tl
 
   template<class T> struct Find<Null,T> : False {};
 
-  void name(int) { std::cout << " int" << std::endl;}
-  void name(char) { std::cout << " char" << std::endl;}
-  void name(double) { std::cout << " double" << std::endl;}
-
   template<class A, class B> struct Pair{};
 
   template<class TL> struct Tuple
@@ -92,6 +90,8 @@ namespace tl
     Tuple_ tuple;
   };
 
+  template<> struct Tuple<Null> {};
+  
   template<class TL, class T>
   T& at(Tuple<TL>& tuple, Pair<T,T>) { return tuple.obj; }
 
@@ -103,16 +103,17 @@ namespace tl
     static_assert((Find<TL,T>::value),"Type doesn't exist");
     return at(tuple, Pair<typename Tuple<TL>::Type,T>());
   }
-
-  template<> struct Tuple<Null>{};
-
-
+  
+  void name(int) { std::cout << " int" << std::endl;}
+  void name(char) { std::cout << " char" << std::endl;}
+  void name(double) { std::cout << " double" << std::endl;}
+  
   int test_tl()
   {
     std::cout << Equal<int,double>::value << std::endl;
     std::cout << Equal<double,double>::value << std::endl;
     
-    typedef List<int,List<char,List<double,Null>>> TL;
+    typedef MakeTL<int,char,double> TL;
     
     std::cout << " Nb type : " << Size<TL>::value << std::endl;
     name(At<TL,0>::type());
@@ -130,8 +131,60 @@ namespace tl
   }
 }
 
+
+namespace vect
+{
+  typedef std::vector<int> Vector;
+
+  template<class A, class B> struct Add
+  {
+    const A& a;
+    const B& b;
+    Add(const A& a_, const B& b_):a(a_),b(b_){}
+    size_t size() const { return a.size(); }
+  };
+
+  int eval(const Vector& a, size_t i)
+  {
+    return a[i];
+  }
+
+  template<class A, class B> int eval(const Add<A,B>& expr, size_t i)
+  {
+    return eval(expr.a,i) + eval(expr.b,i);
+  }
+
+  template<class A, class B> Add<A,B> operator+(const A& a, const B& b)
+  {
+    return Add<A,B>(a,b);
+  }
+
+  template<class Expr>
+  void assign(Vector& a, const Expr& expr)
+  {
+    a.resize(expr.size());
+    for(size_t i = 0 ; i < expr.size() ; ++i)
+      a[i] = eval(expr,i);
+  }
+
+  std::ostream& operator<<(std::ostream& o, const Vector& a)
+  {
+    std::copy(a.begin(),a.end(),std::ostream_iterator<Vector::value_type>(o," "));
+    return o;
+  }
+
+  void test_vect()
+  {
+    size_t n = 10;
+    Vector a(n,0),b(n,1),c(n,10),d(n,100),e(n,1000);
+    assign(a,b + c + d + e);
+    std::cout << a << std::endl;
+  }
+}
+
 int main()
 {
   xpr::test_expr();
-  tl::test_tl();
+  ttt::test_tl();
+  vect::test_vect();
 }
