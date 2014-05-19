@@ -1,46 +1,10 @@
 #include <iostream>
 #include <vector>
-#include <iterator>
-
-namespace xpr
-{
-  struct A
-  {
-    int value;
-    A(int val):value(val){std::cout << " Default constructor " << value << std::endl;}
-    
-    int eval() const { return value; }
-    template<class Expr>
-    A(Expr expr):value(expr.eval()){}
-  };
-
-  template<class X, class Y> struct Add
-  {
-    const X& x;
-    const Y& y;
-    Add(const X& x_, const Y& y_):x(x_),y(y_){}
-    auto eval() const -> decltype (x.eval() + y.eval()) { return x.eval() + y.eval(); }
-  };
-
-  template<class X, class Y> Add<X,Y> operator+(const X& a, const Y& b)
-  {
-    return Add<X,Y>(a,b);
-  }
-
-  int test_expr()
-  {
-    A b(1),c(10),d(100),e(1000);
-    std::cout << "\n Evalutation " << std::endl;
-    A a = b + c + d + e;
-    std::cout << " result : " << (b + c + d + e).eval() << std::endl;
-    std::cout << " result : " << a.value << std::endl;
-  }
-}
-
 
 namespace ttt
 {
   struct Clement{}; void clement(Clement){}
+  template<char> struct Type {};
   
   struct False { enum {value = false}; };
   struct True { enum {value = true}; };
@@ -50,13 +14,16 @@ namespace ttt
 
   struct Null {};
 
+  template<class A = Null, class B = Null, class C = Null> struct Tag {};
+  
   template<class T, class Q> struct List
   {
     typedef T Head;
     typedef Q Queue;
   };
 
-  template<class A = Null, class B = Null, class C = Null, class D = Null, class E = Null, class F = Null> struct MakeTL : List<A,List<B,List<C,List<D,List<E,List<F,Null>>>>>> {};
+  template<class A = Null, class B = Null, class C = Null, class D = Null, class E = Null, class F = Null, class G = Null> 
+  struct MakeTL : List<A,List<B,List<C,List<D,List<E,List<F,List<G,Null>>>>>>> {};
   
   template<class TL> struct Size
   {
@@ -82,8 +49,6 @@ namespace ttt
 
   template<class T> struct Find<Null,T> : False {};
 
-  template<class A, class B> struct Pair{};
-
   template<class TL> struct Tuple
   {
     typedef typename TL::Head Type;
@@ -93,63 +58,67 @@ namespace ttt
   };
 
   template<> struct Tuple<Null> {};
+  template<> struct Tuple<List<Null,Null>> {};
+  template<> struct Tuple<List<Null,List<Null,Null>>> {};
+  template<> struct Tuple<List<Null,List<Null,List<Null,Null>>>> {};
+  template<> struct Tuple<List<Null,List<Null,List<Null,List<Null,Null>>>>> {};
   
-  template<class TL, class T>
-  T& at(Tuple<TL>& tuple, Pair<T,T>) { return tuple.obj; }
+  template<class TL, class T> T& at(Tuple<TL>& tuple, Tag<T,T>) { return tuple.obj; }
 
-  template<class TL, class Type, class T>
-  T& at(Tuple<TL>& tuple, Pair<Type,T>) { return at<T>(tuple.tuple); }
+  template<class TL, class Type, class T> T& at(Tuple<TL>& tuple, Tag<Type,T>) { return at<T>(tuple.tuple); }
     
   template<class T, class TL> T& at(Tuple<TL>& tuple)
   {
     static_assert((Find<TL,T>::value),"Type doesn't exist");
-    return at(tuple, Pair<typename Tuple<TL>::Type,T>());
+    return at(tuple, Tag<typename Tuple<TL>::Type,T>());
   }
   
-  template<class T> struct Tag {};
-  template<class T, class U> struct Tag2 {};
+  template<size_t I, class TL> typename At<TL,I>::type& at(Tuple<TL>& tuple)
+  {
+    return at(tuple,Tag<typename Tuple<TL>::Type,typename At<TL,I>::type>());
+  }
+  
   struct _1 {};
+  struct _2 {};
   
   template<class T> struct Name { static std::string name() { return "***"; } };
   template<class T> std::string name() { return Name<T>::name();}
 
   template<class F, class T> struct Apply {};
   
-  template<template<class> class F, class _, class T> struct Apply<F<_>,T>
+  template<template<class> class F, class _1, class T> struct Apply<F<_1>,T>
   {
-    typedef F<T> type;
+    typedef typename F<T>::type type;
   };
   
-  template<template<class, class> class F, class _, class __, class T> struct Apply<F<_,__>,T>
+  template<template<class, class> class F, class _1, class _2, class T> struct Apply<F<_1,_2>,T>
   {
-    typedef F<T,__> type;
+    typedef typename F<T,_2>::type type;
   };
 
   template<class TL, class Op> struct Transform
   {
     typedef List< typename Apply<Op,typename TL::Head>::type, typename Transform< typename TL::Queue, Op>::type > type;
   };
-
-  template<class T, class Op> struct Transform<List<T,Null>,Op>
-  {
-    typedef T type;
-  };
   
-  template<class T, class Op> struct Transform<List<Null,T>,Op>
-  {
-    typedef T type;
-  };
+  template<class T, class Op> struct Transform<List<T,Null>,Op> { typedef List<typename Apply<Op,T>::type,Null> type; };
+  template<class T, class Op> struct Transform<List<T,List<Null,Null>>,Op> { typedef List<typename Apply<Op,T>::type,Null> type; };
+  template<class T, class Op> struct Transform<List<T,List<Null,List<Null,Null>>>,Op> { typedef List<typename Apply<Op,T>::type,Null> type; };
+  template<class T, class Op> struct Transform<List<T,List<Null,List<Null,List<Null,Null>>>>,Op> { typedef List<typename Apply<Op,T>::type,Null> type; };
+  template<class T, class Op> struct Transform<List<T,List<Null,List<Null,List<Null,List<Null,Null>>>>>,Op> { typedef List<typename Apply<Op,T>::type,Null> type; };
+  template<class T, class Op> struct Transform<List<T,List<Null,List<Null,List<Null,List<Null,List<Null,Null>>>>>>,Op> { typedef List<typename Apply<Op,T>::type,Null> type; };
   
+    
   template<> struct Name<void> { static std::string name() { return "void"; } };
   template<> struct Name<int> { static std::string name() { return "int"; } };
   template<> struct Name<char> { static std::string name() { return "char"; } };
   template<> struct Name<double> { static std::string name() { return "double"; } };
   template<> struct Name<_1> { static std::string name() { return "_1"; } };
-  template<class T> struct Name<Tag<T>> { static std::string name() { return "Tag<" + ttt::name<T>() + ">"; } };
-  template<class T, class U> struct Name<Tag2<T,U>> { static std::string name() { return "Tag<" + ttt::name<T>() +  ttt::name<U>() + ">"; } };
+  template<char C> struct Name<Type<C>> { static std::string name() { return std::string() + "Type<" + C + ">"; } };
   template<class H, class Q> struct Name<List<H,Q>> { static std::string name() { return ttt::name<H>() + "," + ttt::name<Q>(); } };
-  template<class H> struct Name<List<H,Null>> { static std::string name() { return ttt::name<H>(); } };
-  template<class Q> struct Name<List<Null,Q>> { static std::string name() { return ""; } };
+  template<class H> struct Name<List<H,Null>> { static std::string name() { return ttt::name<H>() + "Null"; } };
+  template<class Q> struct Name<List<Null,Q>> { static std::string name() { return std::string() + "Null" + ttt::name<Q>(); } };
+  template<> struct Name<List<Null,Null>> { static std::string name() { return "<Null,Null>"; } };
   
 
   template<class ... T> struct Name<MakeTL<T ...>> { static std::string name() { 
@@ -162,37 +131,36 @@ namespace ttt
   
   template<class F, class T> struct Name<Apply<F,T>> { static std::string name() { return "Apply<" + ttt::name<F>() + "," + ttt::name<T>() + ">"; } };
   
-  template<class T> struct Name<std::vector<T>> { static std::string name() { return "std::vector<>"; } };
+  template<class T> struct Name<std::vector<T>> { static std::string name() { return "std::vector<" + ttt::name<T>() + ">"; } };
   
-  template<class A> struct MakeTag : Tag2<A,void> {};
+  template<class T> struct MakeVector { typedef std::vector<T,std::allocator<T>> type; };
   
-  template<class T> struct Name<MakeTag<T>> { static std::string name() { return "_Tag<" + ttt::name<T>() + "...>"; } };
   
-  template<class T> struct MakeVector { typedef std::vector<T> type; };
   
+  template<class Type, class TL, class T = Type> void push_back(Tuple<TL>& tuple, const T& obj)
+  {
+    at<Type>(tuple).push_back(obj);
+  }
+  
+  template<class TL, class T> size_t size(Tuple<TL>& tuple, Tag<T>)
+  {
+    return at_c(tuple,Tag<T>()).size();
+  }
+
   int test_tl()
   {
     std::cout << Equal<int,double>::value << std::endl;
     std::cout << Equal<double,double>::value << std::endl;
     
-    typedef MakeTL<int,char,double> TL;
-    typedef Transform<TL,Tag<_1>>::type TL2;
-    typedef Transform<TL,MakeTag<_1>>::type TL3;
-    typedef Transform<TL,std::vector<_1>>::type TL4;
-    typedef Transform<TL,MakeVector<_1>>::type TL5;
-    
+    typedef MakeTL<Type<'A'>,Type<'B'>,Type<'C'>,int,char,double> TL;
+    typedef Transform<TL,MakeVector<_1>>::type TL2;
     std::cout << " TL  >> " << name<TL>() << std::endl;
     std::cout << " TL2 >> " << name<TL2>() << std::endl;
-    std::cout << " TL3 >> " << name<TL3>() << std::endl;
-    std::cout << " TL4 >> " << name<TL4>() << std::endl;
-    std::cout << " TL5 >> " << name<TL5>() << std::endl;
-    Tuple<TL4> tuple_vector;
-    //at<MakeVector<std::vector<int>>>(tuple_vector);
     
     std::cout << "***-- " << name<At<TL2,1>::type>() << std::endl;
     
-    std::cout << " apply : " << name<Apply<Tag<_1>,int>>() << std::endl;
-    std::cout << " result : " << name<Apply<Tag<_1>,int>::type>() << std::endl;
+    std::cout << " apply : " << name<Apply<MakeVector<_1>,int>>() << std::endl;
+    std::cout << " result : " << name<Apply<MakeVector<_1>,int>::type>() << std::endl;
 
     std::cout << " Nb type : " << Size<TL>::value << std::endl;
     std::cout << name<At<TL,0>::type>() << std::endl;
@@ -202,68 +170,20 @@ namespace ttt
     std::cout << " find float " << Find<TL,float>::value << std::endl;
     
     Tuple<TL> tuple;
+    
   //   tuple.get<float>();
     at<int>(tuple) = 2;
     at<double>(tuple) = 0.123456;
-    std::cout << " int " << at<int>(tuple) << std::endl;
-    std::cout << " double " << at<double>(tuple) << std::endl;
-  }
-}
-
-
-namespace vect
-{
-  typedef std::vector<int> Vector;
-
-  template<class A, class B> struct Add
-  {
-    const A& a;
-    const B& b;
-    Add(const A& a_, const B& b_):a(a_),b(b_){}
-    size_t size() const { return a.size(); }
-  };
-
-  int eval(const Vector& a, size_t i)
-  {
-    return a[i];
-  }
-
-  template<class A, class B> int eval(const Add<A,B>& expr, size_t i)
-  {
-    return eval(expr.a,i) + eval(expr.b,i);
-  }
-
-  template<class A, class B> Add<A,B> operator+(const A& a, const B& b)
-  {
-    return Add<A,B>(a,b);
-  }
-
-  template<class Expr>
-  void assign(Vector& a, const Expr& expr)
-  {
-    a.resize(expr.size());
-    for(size_t i = 0 ; i < expr.size() ; ++i)
-      a[i] = eval(expr,i);
-  }
-
-  std::ostream& operator<<(std::ostream& o, const Vector& a)
-  {
-    std::copy(a.begin(),a.end(),std::ostream_iterator<Vector::value_type>(o," "));
-    return o;
-  }
-
-  void test_vect()
-  {
-    size_t n = 10;
-    Vector a(n,0),b(n,1),c(n,10),d(n,100),e(n,1000);
-    assign(a,b + c + d + e);
-    std::cout << a << std::endl;
+    Tuple<TL2> tuple2;
+    at<0>(tuple2).size();
+    push_back<MakeVector<Type<'A'>>::type>(tuple2,Type<'A'>());
+    //std::cout << " Size :" << size(tuple2,Tag<Type<'A'>>()) << std::endl;
+    //std::cout << " int " << at<int>(tuple) << std::endl;
+    //std::cout << " double " << at<double>(tuple) << std::endl;
   }
 }
 
 int main()
 {
-  //xpr::test_expr();
   ttt::test_tl();
-  //vect::test_vect();
 }
