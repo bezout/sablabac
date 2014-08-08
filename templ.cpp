@@ -1,18 +1,15 @@
 #include <iostream>
 
-template<class T> struct S
+template<class T, size_t N>
+constexpr size_t truc(T(&)[N])
 {
-  S(){std::cout << " S<T>()" << std::endl;}
-};
+    return N;
+}
 
-template<class R, class A, class B> struct S<R(A,B)>
-{
-  S(){std::cout << " S<R(A,B)>()" << std::endl;}
-};
 
 int main()
 {
-    S<int>();
-    S<int(int,double)>();
+int a[5];
+std::cout << " size : " << truc(a) << std::endl;;
 }
 
