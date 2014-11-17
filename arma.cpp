@@ -13,7 +13,7 @@
 #include <ctime>
 #include <sys/time.h>
 static const size_t K = 9;
-static const size_t L = 9;
+static const size_t L = 3;
 static const size_t M = 1;
 
 template<int K, int L> struct Arma
@@ -66,7 +66,7 @@ static inline double  now() {
 
 int main()
 {
-  size_t n = 1000000;
+  size_t n = 10000000;
   double t1,t2,t3;
   
   {

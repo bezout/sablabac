@@ -9,10 +9,8 @@ template<class E1, class E2> struct Operator
 {
   E1 left;
   E2 right;
-
   Operator(E1 e1_, E2 e2_):left(e1_),right(e2_){}
-  
-  };
+};
 
 template<class E1, class E2> struct Add : Operator<E1,E2>
 {

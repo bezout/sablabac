@@ -14,7 +14,7 @@ template<class _Elt, class ... Rest> struct Tuple<_Elt, Rest ...> : Tuple<Rest .
 template<size_t I> struct Get
 {
   template<class ... T> 
-  static auto& get(Tuple<T...>& tuple)// -> decltype(Get<I-1>::get(tuple.tail()))
+  static auto& get(Tuple<T...>& tuple)
   {
     return Get<I-1>::get(tuple.tail());
   }
@@ -23,7 +23,7 @@ template<size_t I> struct Get
 template<> struct Get<0>
 {
   template<class ... T> 
-  static auto& get(Tuple<T...>& tuple)// -> decltype(tuple.elt)
+  static auto& get(Tuple<T...>& tuple)
   {
     return tuple.elt;
   }
