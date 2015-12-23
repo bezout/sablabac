@@ -54,6 +54,7 @@ struct Verbose: DefaultVerbose
     << "Bundle adjustment using:"
     << "\e[33m"
     << std::endl
+    << name<Solver>() << " : "
     << name<Algorithm>()
     << "\e[36m"
     << std::endl;

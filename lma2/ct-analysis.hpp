@@ -11,5 +11,4 @@ namespace lma
   };
 
   template<class F> struct AnalyseFunctor : AnalyseExtractFromType<decltype(&F::operator())> {};
-
 }

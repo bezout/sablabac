@@ -26,20 +26,11 @@ namespace lma
   {
     double t;
     std::string name;
-    Tic(std::string name_ =""):name(name_)
-    {
-      tic();
-    }
+    Tic(std::string name_ =""):name(name_) { tic(); }
 
-    void tic()
-    {
-      t = now();
-    }
+    void tic() { t = now(); }
 
-    double toc() const
-    {
-      return now() - t;
-    }
+    double toc() const { return now() - t; }
 
     std::ostream& disp(std::ostream& o = std::cout , const std::string& str="") const
     {

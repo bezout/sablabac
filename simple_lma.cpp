@@ -9,28 +9,7 @@ struct Parameters{ double x,y;};
 std::ostream& operator<<(std::ostream& o, const Parameters& p) { return o << "Parameters(" << p.x << "," << p.y << ")"; }
 
 template<class Float> void resize(Eigen::Matrix<Float,1,2>&, size_t) {}
-
 template<class Float> void resize(Eigen::Matrix<Float,1,Eigen::Dynamic>& mat, size_t n) { mat.resize(n); }
-
-struct Reprojection
-{
-  bool operator()(const Parameters& p, double& r) const
-  {
-    auto& x = p.x;
-    auto& y = p.y;
-    r = 0.5*x*x*x + 10.0*y*y;
-    return true;
-  }
-
-  void analytical(const Parameters& p, auto& mat) const
-  {
-    resize(mat,2);
-    auto& x = p.x;
-    auto& y = p.y;
-    mat[0] = 0.5*3.0*p.x*p.x;
-    mat[1] = 10.0*2.0*p.y;
-  }
-};
 
 struct Rosenbrock
 {
@@ -52,10 +31,11 @@ struct Rosenbrock
   }
 };
 
-constexpr size_t size(Type<Parameters>) { return 2; }
-constexpr size_t size(Type<double>) { return 1; }
+//constexpr int size(const auto&) { return -1 ;}
+constexpr int size(Type<Parameters>) { return 2; }
+constexpr int size(Type<double>) { return 1; }
 
-void update_parameters(Parameters& parameters, auto delta[size(Type<Parameters>{})])
+void update_parameters(Parameters& parameters, const auto* delta)
 {
   //static_assert( size(Type<Parameters>{}) == 2 , "size(Type<Parameters>{})==2");
   parameters.x += delta[0];
@@ -64,36 +44,64 @@ void update_parameters(Parameters& parameters, auto delta[size(Type<Parameters>{
 
 namespace lma
 {
-  template<> struct Name<Reprojection> { static std::string name() { return "Reprojection"; } };
   template<> struct Name<Parameters> { static std::string name() { return "Parameters"; } };
+  template<> struct Name<Rosenbrock> { static std::string name() { return "Rosenbrock"; } };
+  
+  template<> struct DDL<Parameters,2>
+  {
+    void update_parameters(Parameters& parameters, const auto* delta)
+    {
+      parameters.x += delta[0];
+      parameters.y += delta[1];
+    }
+  };
 }
 
 #include "lma2/solver.hpp"
 
 
-void test(auto lm)
+
+void test_static(auto lm)
 {
   Parameters parameters {0.9,0.9};
-  Solver<Rosenbrock> solver;
-  solver.add(Rosenbrock{},&parameters);
-  solver.solve(lm,Verbose{});//.solve(LM<double>{15,1},Verbose{});
+  Solver<Rosenbrock>::SetNbInstanceOfFunctors<1>::type::SetNbInstanceOfParameters<1>::type().add(Rosenbrock{},&parameters).solve(lm,Verbose{});
+}
+
+void test_dynamic(auto lm)
+{
+  Parameters parameters {0.9,0.9};
+  Solver<Rosenbrock>().add(Rosenbrock{},&parameters).solve(lm,Verbose{});
 }
 
 int main()
 {
-  test(LM<double>{15,1});
-  test(LMN<double>{15,1});
+
+  test_static(LM<double>{10,1.});
+  test_dynamic(LM<double>{10,1.});
+  test_static(LM<float>{10,1.f});
+  test_dynamic(LM<float>{10,1.f});
   
-  /*
-  parameters = {-1,-1};
-  solver.solve(LM<double>{},Verbose{});
-  */
+  test_static(LMN<double>{10,1.});
+  test_dynamic(LMN<double>{10,1.});
+  test_static(LMN<float>{10,1.f});
+  test_dynamic(LMN<float>{10,1.f});
+
 }
 
 // float,double
 // dynamic,static
-// LM,LM2
-// update_policy ?
+// LM,LMN
 
 
-// reset && g++-5 simple_lma.cpp -std=c++1y -I/home/datta/develop/root/include/eigen3 -isystem/home/datta/develop/root/include/eigen3 -lboost_system -lboost_chrono && ./a.out
+/*
+ *  PLAN :
+ *   avec n/m statique ou dynamique
+ *   1 : n instances d'1 type d'erreur pour 1 instance d'1 type de paramètre
+ *   2 : n instances d'1 type d'erreur pour m instances d'1 type de paramètre
+ *   3 : n[...] instances de N types d'erreur pour m instances d'1 type de paramètre
+ *   4 : n[...] instances de N types d'erreur pour m[...] instances de M types de paramètre
+ * 
+ * update_policy ?
+ */
+
+// reset && time g++-5 simple_lma.cpp -std=c++1y -I/home/datta/develop/root/include/eigen3 -isystem/home/datta/develop/root/include/eigen3 -lboost_system -lboost_chrono && ./a.out

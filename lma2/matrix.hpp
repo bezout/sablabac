@@ -6,7 +6,7 @@
 
 namespace lma
 {
-  template<class Float, size_t I, size_t J> struct CreateMatrix
+  template<class Float, int I, int J> struct CreateMatrix
   {
     using Mat = Eigen::Matrix<Float,I,J>;
   };
@@ -16,12 +16,12 @@ namespace lma
     using Mat = Float;
   };
   
-  template<class Float, size_t J> struct CreateMatrix<Float,0,J>
+  template<class Float, int J> struct CreateMatrix<Float,0,J>
   {
     using Mat = Eigen::Matrix<Float,Eigen::Dynamic,J>;
   };
   
-  template<class Float, size_t I> struct CreateMatrix<Float,I,0>
+  template<class Float, int I> struct CreateMatrix<Float,I,0>
   {
     using Mat = Eigen::Matrix<Float,I,Eigen::Dynamic>;
   };
@@ -31,7 +31,7 @@ namespace lma
     using Mat = Eigen::Matrix<Float,Eigen::Dynamic,Eigen::Dynamic>;
   };  
   
-  template<class Float, size_t I, size_t J> 
+  template<class Float, int I, int J> 
   using Matrix = typename CreateMatrix<Float,I,J>::Mat;
 
 
@@ -41,25 +41,25 @@ namespace lma
 
 
   template<class Float, int I, int J>
-  constexpr size_t cols(const Eigen::Matrix<Float,I,J>& mat)
+  constexpr int cols(const Eigen::Matrix<Float,I,J>& mat)
   {
     return J;
   }
   
   template<class Float, int I, int J>
-  constexpr size_t rows(const Eigen::Matrix<Float,I,J>& mat)
+  constexpr int rows(const Eigen::Matrix<Float,I,J>& mat)
   {
     return I;
   }
   
   template<class Float, int I>
-  size_t cols(const Eigen::Matrix<Float,I,Eigen::Dynamic>& mat)
+  int cols(const Eigen::Matrix<Float,I,Eigen::Dynamic>& mat)
   {
     return mat.cols();
   }
   
   template<class Float, int J>
-  size_t rows(const Eigen::Matrix<Float,Eigen::Dynamic,J>& mat)
+  int rows(const Eigen::Matrix<Float,Eigen::Dynamic,J>& mat)
   {
     return mat.rows();
   }
@@ -126,19 +126,13 @@ namespace lma
     }
     return x;
   }
-  
-  
 }
 
 
 namespace lma
 {
-  template<class T>
-  constexpr T pow(const T& value, size_t I)
+  constexpr auto pow(const auto& value, int i)
   {
-    if (I==1) return value;
-    if (I==2) return value * value;
-    if (I==3) return value * value * value;
-    return 0;
+    return (i==0) ? value : value * pow(value,i-1);
   }
 }

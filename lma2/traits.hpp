@@ -25,5 +25,4 @@ namespace lma
   struct Adl{};
 
   template<class> struct Type {};
-  
 }
