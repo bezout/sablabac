@@ -2,7 +2,7 @@
 
 #include "traits.hpp"
 #include <Eigen/Core>
-#include <Eigen/Cholesky>
+//#include <Eigen/Cholesky>
 
 namespace lma
 {
@@ -88,4 +88,57 @@ namespace lma
       return std::string("Eigen::Matrix<") + lma::name<Float>() + "," + (I==-1?"Dynamic":std::to_string(I)) + "," + (J==-1?"Dynamic":std::to_string(J)) + ">";
     }
   };
+  
+  
+  
+  template<class Matrix, class Vector>
+  constexpr Vector llt(Matrix u, Vector x, int size)
+  {
+    for(int i = 0 ; i < size ; ++i)
+    {
+      for(int k = 0 ; k < i ; ++k)
+        u(i,i) -= u(k,i) * u(k,i);
+      
+      assert(u(i,i)>0);
+      if (u(i,i)<=0) throw ZeroOrInfiniteError("LLT");
+      u(i,i) = std::sqrt(u(i,i));
+      
+      for(int j = i + 1; j < size ; ++j)
+      {
+        for(int k = 0 ; k < i ; ++k)
+          u(i,j) -= u(k,i) * u(k,j);
+        u(i,j) /= u(i,i);
+      }
+    }
+
+    for(int j = 0 ; j < size; ++j)
+    {
+      for(int i = 0 ; i < j ; ++i)
+        x[j] -= u(i,j) * x[i];
+      x[j] /= u(j,j);
+    }
+    
+    for(int j = size - 1 ; j >=0  ; --j)
+    {
+      for(int i = j+1 ; i < size ; ++i)
+        x[j] -= u(j,i) * x[i];
+      x[j] /= u(j,j);
+    }
+    return x;
+  }
+  
+  
+}
+
+
+namespace lma
+{
+  template<class T>
+  constexpr T pow(const T& value, size_t I)
+  {
+    if (I==1) return value;
+    if (I==2) return value * value;
+    if (I==3) return value * value * value;
+    return 0;
+  }
 }

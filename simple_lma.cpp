@@ -71,14 +71,19 @@ namespace lma
 #include "lma2/solver.hpp"
 
 
-
-int main()
+void test(auto lm)
 {
   Parameters parameters {0.9,0.9};
   Solver<Rosenbrock> solver;
   solver.add(Rosenbrock{},&parameters);
+  solver.solve(lm,Verbose{});//.solve(LM<double>{15,1},Verbose{});
+}
+
+int main()
+{
+  test(LM<double>{15,1});
+  test(LMN<double>{15,1});
   
-  solver.solve(LM<double>{100,1},Verbose{});//.solve(LM<double>{15,1},Verbose{});
   /*
   parameters = {-1,-1};
   solver.solve(LM<double>{},Verbose{});
@@ -87,7 +92,8 @@ int main()
 
 // float,double
 // dynamic,static
+// LM,LM2
 // update_policy ?
 
 
-// reset && g++-5 simple_lma.cpp -std=c++1y -I/home/datta/develop/root/include/eigen3 -isystem/home/datta/develop/root/include/eigen3 && ./a.out
+// reset && g++-5 simple_lma.cpp -std=c++1y -I/home/datta/develop/root/include/eigen3 -isystem/home/datta/develop/root/include/eigen3 -lboost_system -lboost_chrono && ./a.out
