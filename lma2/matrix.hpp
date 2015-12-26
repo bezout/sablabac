@@ -1,44 +1,38 @@
 #pragma once
 
-#include <array>
-#include <vector>
 #include "block.hpp"
-#include "container.hpp"
+//#include "container.hpp"
 //#include <Eigen/Cholesky>
+//#include <Eigen/Dense>
 
 
 namespace lma
 {
   
-  template<class F, int Dimension>
-  struct Matrix
+  template<class Block, int Dimension> struct CreateMatrix
   {
-    std::array<F,Dimension> data;
-    int last = 0;
-    void push_back(const F& f) { assert(last < Dimension); data[last] = f; ++last; }
-    constexpr size_t size() const { return Dimension; }
-    inline void resize(size_t) {}
-    const F& operator[](size_t i) const { assert( i < size() ); return data[i]; }
-    F& operator[](size_t i) { assert( i < size() ); return data[i]; }
+    using Matrix = Eigen::MatrixXd;
   };
   
-  template<class F>
-  struct Matrix<F,-1>
+  template<class Block, int Dimension>
+  using Matrix = typename CreateMatrix<Block,Dimension>::Matrix;
+  
+  template<class Block, int Dimension> struct CreateVector
   {
-    AlignedVector<F> data;
-    void push_back(const F& f) { data.push_back(f); }
-    size_t size() const { return data.size(); }
-    void resize(size_t s) { data.resize(s); }
-    const F& operator[](size_t i) const { assert( i < size() ); return data[i]; }
-    F& operator[](size_t i) { assert( i < size() ); return data[i]; }
+    using Vector = Eigen::VectorXd;
   };
   
-  template<class F, int Dimension> auto begin(const Matrix<F,Dimension>& container) { return container.data.begin(); }
-  template<class F, int Dimension> auto end(const Matrix<F,Dimension>& container) { return container.data.end(); }
+  template<class Block, int Dimension>
+  using Vector = typename CreateVector<Block,Dimension>::Vector;
   
-  template<class F, int Dimension> auto begin(Matrix<F,Dimension>& container) { return container.data.begin(); }
-  template<class F, int Dimension> auto end(Matrix<F,Dimension>& container) { return container.data.end(); }
-  
+  template<class Mat, class Float>
+  Mat& damping(Mat& mat, const Float& lambda)
+  {
+    for(int i = 0 ; i < mat.cols() ; ++i)
+      mat(i,i) += lambda;
+    return mat;
+  }
+ 
   
   template<class Matrix, class Vector>
   constexpr Vector llt(Matrix u, Vector x, int size)

@@ -39,6 +39,8 @@ namespace lma
 
   double squared_norm(const double& value) { return value * value ; }
 
+  template<class Float, int I, int J>
+  Float squared_norm(const Eigen::Matrix<Float,I,J>& mat) { return mat.squaredNorm() ; }
 
   template<class Float, int I, int J>
   constexpr int cols(const Eigen::Matrix<Float,I,J>& mat)
@@ -88,10 +90,7 @@ namespace lma
       return std::string("Eigen::Matrix<") + lma::name<Float>() + "," + (I==-1?"Dynamic":std::to_string(I)) + "," + (J==-1?"Dynamic":std::to_string(J)) + ">";
     }
   };
-  
-  
-  
-  
+
 }
 
 

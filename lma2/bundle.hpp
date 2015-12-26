@@ -9,11 +9,20 @@ namespace lma
   
   template<class Functor, class Parameters, int NbInstanceOfFunctor_, int NbInstanceOfParameters_> struct Data
   {
+    using InfoFunctor = AnalyseFunctor<Functor>;
+    using Residual = typename InfoFunctor::Residual;
+    
     static constexpr int NbInstanceOfFunctor = NbInstanceOfFunctor_;
     static constexpr int NbInstanceOfParameters = NbInstanceOfParameters_;
 
+    static constexpr size_t DDL = size(Type<Parameters>{});
+    static constexpr size_t ErreurSize = size(Type<Residual>{});
+    
     Container<std::pair<Functor,Parameters*>,NbInstanceOfFunctor> functors;
     
+    
+    int total_parameters() const { return parameters.size() * DDL; }
+    int total_errors() const { return functors.size() * ErreurSize; }
     
     Container<Parameters*,NbInstanceOfParameters> parameters;
     Container<Parameters,NbInstanceOfParameters> save_parameters;
@@ -39,10 +48,12 @@ namespace lma
       //TODO MAJ GRAPHE DE DONNEES
     }
     
-    void update_parameters(const auto& deltas)
+    void update_parameters(const auto& delta)
     {
       for(size_t i = 0 ; i < parameters.size() ; ++i)
-        apply_increment(*parameters[i],deltas[i].data());
+      {
+        apply_increment(*parameters[i],delta.template segment<DDL>(i*DDL).data());
+      }
     }
     
     void save()
@@ -60,16 +71,14 @@ namespace lma
     
     void call_analytical(auto& jacobians) const
     {
-      jacobians.resize(functors.size());
       for(size_t i = 0 ; i < functors.size() ; ++i)
-        functors[i].first.analytical(*functors[i].second,jacobians[i]);
+        functors[i].first.analytical(*functors[i].second,jacobians.block(i,0,ErreurSize,DDL));
     }
     
     template<class CastResidual>
     int compute_error(auto& errors, const Type<CastResidual>&) const
     {
       int success = 0;
-      errors.resize(functors.size());
       for(size_t i = 0 ; i < functors.size() ; ++i)
         success += functors[i].first(*functors[i].second,CastResidual(errors[i]).data());
       return success;

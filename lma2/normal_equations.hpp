@@ -29,15 +29,17 @@ namespace lma
     using ResidualBlock = Block<Float,NbError,1>;
     using FinalResidual = CastResidual<ResidualBlock,FunctorResidual>;
     
-    //TODO  HESSIAN DENSE ?
-    HessianBlock h;
+    using Hessian = Matrix<HessianBlock,NbInstanceOfParameters>;
+    using Jacobian = Matrix<JacobianBlock,NbInstanceOfFunctor>;
     
-    Matrix<JacobianBlock,NbInstanceOfFunctor> j;
-    Container<ResidualBlock,NbInstanceOfFunctor> e;
-
-    //TODO  VECTOR DENSE ?    
-    Container<DeltaBlock,NbInstanceOfParameters> delta;
-    Container<DeltaBlock,NbInstanceOfParameters> jte;
+    using Delta = Vector<DeltaBlock,NbInstanceOfParameters>;
+    using JTE = Vector<DeltaBlock,NbInstanceOfParameters>;
+    
+    Jacobian j;
+    Vector<ResidualBlock,NbInstanceOfFunctor> e;
+    Hessian h;
+    Delta delta;
+    JTE jte;
 
     static void disp()
     {/*
@@ -47,16 +49,24 @@ namespace lma
       std::cout << " Residual : " << name<EquationResidual>() << std::endl;*/
     }
 
+    void resize(const auto& bundle)
+    {
+      j.resize(bundle.total_errors(),bundle.total_parameters());
+      h.resize(bundle.total_parameters(),bundle.total_parameters());
+      delta.resize(bundle.total_parameters());
+      jte.resize(bundle.total_parameters());
+      e.resize(bundle.total_errors());
+    }
+
     std::pair<Float,int> compute_error(const auto& bundle)
     {
       int success = bundle.compute_error(e, Type<FinalResidual>{});
       Float total_error = 0;
-      for(auto& x : e)
-        total_error += squared_norm(x);
+      total_error += squared_norm(e);
       return {total_error/2.0,success};
     }
 
-    Container<DeltaBlock,NbInstanceOfParameters>& solve(const auto& lm, const auto& bundle)
+    Delta& solve(const auto& lm, const auto& bundle)
     {
       compute_jacobian(bundle);
       return solve_delta(lm);
@@ -64,13 +74,7 @@ namespace lma
     
     Float compute_scale(Float lambda) const
     {
-      Float scale = 0.;
-      loop(delta,jte,[&](auto& d, auto& jte_)
-      {
-        for (size_t j=0; j < rows(d); j++)
-          scale += d(j) * (lambda * d(j) + jte_(j));// SIMPLIFIABLE AVEC VECTEUR DENSE ?
-      });
-      return scale;
+      return delta.dot(lambda * delta + jte);
     }
     
     private:
@@ -80,34 +84,10 @@ namespace lma
         bundle.call_analytical(j);
       }
 
-      HessianBlock& damping(HessianBlock& h, const Float& lambda)
+      Delta& solve_delta(const auto& lm)
       {
-        for(int i = 0 ; i < cols(h) ; ++i)
-          h(i,i) += lambda;
-        return h;
-      }
-    
-      Container<DeltaBlock,NbInstanceOfParameters>& solve_delta(const auto& lm)
-      {
-        // MULTI F / P
-        jte.resize(e.size());
-        delta.resize(e.size());
-        assert( begin(j)     != end(j) );
-        assert( begin(e)     != end(e) );
-        assert( begin(jte)   != end(jte) );
-        assert( begin(delta) != end(delta) );
-        
-        auto& x      = *begin(j);
-        auto& err    = *begin(e);
-        auto& jte_   = *begin(jte);
-        auto& delta_ = *begin(delta);
-        
-        damping(h = x.transpose() * x,lm.lambda);
-        jte_ = -x.transpose()*err;
-        delta_ = llt(h,jte_, NbParameters);
+        delta = llt(damping(h = j.transpose() * j, lm.lambda), jte = -j.transpose() * e, h.cols());
         return delta;
-        //return delta = llt( damping(h = x.transpose()*x, lm.lambda), jte = -x.transpose()*err, NbParameters);
-        //return delta = ( damping(h = j.transpose()*j, lm.lambda) ).llt().solve(jte = -j.transpose()*e);
       }
   };
   

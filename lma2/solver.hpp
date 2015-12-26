@@ -25,12 +25,6 @@ namespace lma
       using type = Solver<Functor,NbInstanceOfFunctor,I>;
     };
     
-    //TODO  SET DDL OPTIONNEL
-    //template<class X, int I> struct SetDDL
-    //{
-      //map.add pair<X,Int<I>>
-      //using type = Solver<Functor,NbInstanceOfFunctor,NbInstanceOfParameters, Map>;
-    //};
     
     double initial_cost, final_cost;
     using InfoFunctor = AnalyseFunctor<Functor>;
@@ -49,10 +43,12 @@ namespace lma
     template<template<class Policy> class Policy, class Float, class Verbose=DefaultVerbose>
     Solver& solve(Policy<Float> lm, Verbose verbose = Verbose{})
     {
-      bundle.update();
-      
       using NormalEq = NormalEquation<Float,InfoFunctor,NbInstanceOfFunctor,NbInstanceOfParameters>;
       NormalEq normal_equation;
+      
+      bundle.update();
+      normal_equation.resize(bundle);
+      
       lm.error1 = lm.error2 = normal_equation.compute_error(bundle);
       initial_cost = lm.cost1();
       

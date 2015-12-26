@@ -21,13 +21,13 @@ struct Rosenbrock
     return true;
   }
 
-  void analytical(const Parameters& p, auto& mat) const
+  void analytical(const Parameters& p, auto mat) const
   {
-    resize(mat,2);
+    //resize(mat,2);
     auto& x = p.x;
     auto& y = p.y;
-    mat[0] = -2.0 * (1.0 - x) - 200.0 * (y - x * x) * 2.0 * x;
-    mat[1] = 200.0 * (y - x * x);
+    mat(0,0) = -2.0 * (1.0 - x) - 200.0 * (y - x * x) * 2.0 * x;
+    mat(0,1) = 200.0 * (y - x * x);
   }
 };
 
@@ -65,18 +65,29 @@ namespace lma
 void test_static(auto lm)
 {
   Parameters parameters {0.9,0.9};
-  Solver<Rosenbrock>::SetNbInstanceOfFunctors<1>::type::SetNbInstanceOfParameters<1>::type().add(Rosenbrock{},&parameters).solve(lm,Verbose{});
+  Solver<Rosenbrock>::SetNbInstanceOfFunctors<2>::type::SetNbInstanceOfParameters<1>::type()
+    .add(Rosenbrock{},&parameters)
+    .add(Rosenbrock{},&parameters)
+    .solve(lm,Verbose{});
 }
 
 void test_dynamic(auto lm)
 {
   Parameters parameters {0.9,0.9};
-  Solver<Rosenbrock>().add(Rosenbrock{},&parameters).solve(lm,Verbose{});
+  Solver<Rosenbrock>()
+    .add(Rosenbrock{},&parameters)
+    .add(Rosenbrock{},&parameters)
+    .solve(lm,Verbose{});
 }
 
 int main()
 {
-  int nb_iteration = 2;
+  int nb_iteration = 15;
+  
+  test_static(LMN<double>{nb_iteration,1.});
+  test_dynamic(LMN<double>{nb_iteration,1.});
+  
+/*
   test_static(LM<double>{nb_iteration,1.});
   test_dynamic(LM<double>{nb_iteration,1.});
   test_static(LM<float>{nb_iteration,1.f});
@@ -86,6 +97,7 @@ int main()
   test_dynamic(LMN<double>{nb_iteration,1.});
   test_static(LMN<float>{nb_iteration,1.f});
   test_dynamic(LMN<float>{nb_iteration,1.f});
+*/
 
 }
 
