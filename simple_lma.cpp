@@ -35,7 +35,7 @@ struct Rosenbrock
 constexpr int size(Type<Parameters>) { return 2; }
 constexpr int size(Type<double>) { return 1; }
 
-void update_parameters(Parameters& parameters, const auto* delta)
+void apply_increment(Parameters& parameters, const auto* delta)
 {
   //static_assert( size(Type<Parameters>{}) == 2 , "size(Type<Parameters>{})==2");
   parameters.x += delta[0];
@@ -47,6 +47,7 @@ namespace lma
   template<> struct Name<Parameters> { static std::string name() { return "Parameters"; } };
   template<> struct Name<Rosenbrock> { static std::string name() { return "Rosenbrock"; } };
   
+  /*
   template<> struct DDL<Parameters,2>
   {
     void update_parameters(Parameters& parameters, const auto* delta)
@@ -54,7 +55,7 @@ namespace lma
       parameters.x += delta[0];
       parameters.y += delta[1];
     }
-  };
+  };*/
 }
 
 #include "lma2/solver.hpp"
@@ -75,16 +76,16 @@ void test_dynamic(auto lm)
 
 int main()
 {
-
-  test_static(LM<double>{10,1.});
-  test_dynamic(LM<double>{10,1.});
-  test_static(LM<float>{10,1.f});
-  test_dynamic(LM<float>{10,1.f});
+  int nb_iteration = 2;
+  test_static(LM<double>{nb_iteration,1.});
+  test_dynamic(LM<double>{nb_iteration,1.});
+  test_static(LM<float>{nb_iteration,1.f});
+  test_dynamic(LM<float>{nb_iteration,1.f});
   
-  test_static(LMN<double>{10,1.});
-  test_dynamic(LMN<double>{10,1.});
-  test_static(LMN<float>{10,1.f});
-  test_dynamic(LMN<float>{10,1.f});
+  test_static(LMN<double>{nb_iteration,1.});
+  test_dynamic(LMN<double>{nb_iteration,1.});
+  test_static(LMN<float>{nb_iteration,1.f});
+  test_dynamic(LMN<float>{nb_iteration,1.f});
 
 }
 

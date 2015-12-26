@@ -3,7 +3,7 @@
 #include "predef.hpp"
 
 #include "ct-analysis.hpp"
-#include "matrix.hpp"
+#include "block.hpp"
 #include "verbose.hpp"
 #include "tools.hpp"
 #include "normal_equations.hpp"
@@ -49,6 +49,8 @@ namespace lma
     template<template<class Policy> class Policy, class Float, class Verbose=DefaultVerbose>
     Solver& solve(Policy<Float> lm, Verbose verbose = Verbose{})
     {
+      bundle.update();
+      
       using NormalEq = NormalEquation<Float,InfoFunctor,NbInstanceOfFunctor,NbInstanceOfParameters>;
       NormalEq normal_equation;
       lm.error1 = lm.error2 = normal_equation.compute_error(bundle);

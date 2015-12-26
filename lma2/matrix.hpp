@@ -1,94 +1,43 @@
 #pragma once
 
-#include "traits.hpp"
-#include <Eigen/Core>
+#include <array>
+#include <vector>
+#include "block.hpp"
+#include "container.hpp"
 //#include <Eigen/Cholesky>
+
 
 namespace lma
 {
-  template<class Float, int I, int J> struct CreateMatrix
+  
+  template<class F, int Dimension>
+  struct Matrix
   {
-    using Mat = Eigen::Matrix<Float,I,J>;
+    std::array<F,Dimension> data;
+    int last = 0;
+    void push_back(const F& f) { assert(last < Dimension); data[last] = f; ++last; }
+    constexpr size_t size() const { return Dimension; }
+    inline void resize(size_t) {}
+    const F& operator[](size_t i) const { assert( i < size() ); return data[i]; }
+    F& operator[](size_t i) { assert( i < size() ); return data[i]; }
   };
   
-  template<class Float> struct CreateMatrix<Float,1,1>
+  template<class F>
+  struct Matrix<F,-1>
   {
-    using Mat = Float;
+    AlignedVector<F> data;
+    void push_back(const F& f) { data.push_back(f); }
+    size_t size() const { return data.size(); }
+    void resize(size_t s) { data.resize(s); }
+    const F& operator[](size_t i) const { assert( i < size() ); return data[i]; }
+    F& operator[](size_t i) { assert( i < size() ); return data[i]; }
   };
   
-  template<class Float, int J> struct CreateMatrix<Float,0,J>
-  {
-    using Mat = Eigen::Matrix<Float,Eigen::Dynamic,J>;
-  };
+  template<class F, int Dimension> auto begin(const Matrix<F,Dimension>& container) { return container.data.begin(); }
+  template<class F, int Dimension> auto end(const Matrix<F,Dimension>& container) { return container.data.end(); }
   
-  template<class Float, int I> struct CreateMatrix<Float,I,0>
-  {
-    using Mat = Eigen::Matrix<Float,I,Eigen::Dynamic>;
-  };
-
-  template<class Float> struct CreateMatrix<Float,0,0>
-  {
-    using Mat = Eigen::Matrix<Float,Eigen::Dynamic,Eigen::Dynamic>;
-  };  
-  
-  template<class Float, int I, int J> 
-  using Matrix = typename CreateMatrix<Float,I,J>::Mat;
-
-
-  float squared_norm(const float& value /* enable if is floating point*/) { return value * value ; }
-
-  double squared_norm(const double& value) { return value * value ; }
-
-
-  template<class Float, int I, int J>
-  constexpr int cols(const Eigen::Matrix<Float,I,J>& mat)
-  {
-    return J;
-  }
-  
-  template<class Float, int I, int J>
-  constexpr int rows(const Eigen::Matrix<Float,I,J>& mat)
-  {
-    return I;
-  }
-  
-  template<class Float, int I>
-  int cols(const Eigen::Matrix<Float,I,Eigen::Dynamic>& mat)
-  {
-    return mat.cols();
-  }
-  
-  template<class Float, int J>
-  int rows(const Eigen::Matrix<Float,Eigen::Dynamic,J>& mat)
-  {
-    return mat.rows();
-  }
-  
-  template<class Float, int I, int J>
-  void disp_size(const Eigen::Matrix<Float,I,J>& mat, std::string name)
-  {
-    std::cout << " Size of " << name << " : " << rows(mat) << ", " << cols(mat) << std::endl;
-  }
-  
-  void disp_size(const float&, std::string name)
-  {
-    std::cout << " Size of " << name << " : 1 " << std::endl;
-  }
-  
-  void disp_size(const double&, std::string name)
-  {
-    std::cout << " Size of " << name << " : 1 " << std::endl;
-  }
-  
-  template<class Float, int I, int J>
-  struct Name<Eigen::Matrix<Float,I,J>>
-  {
-    static std::string name()
-    {
-      return std::string("Eigen::Matrix<") + lma::name<Float>() + "," + (I==-1?"Dynamic":std::to_string(I)) + "," + (J==-1?"Dynamic":std::to_string(J)) + ">";
-    }
-  };
-  
+  template<class F, int Dimension> auto begin(Matrix<F,Dimension>& container) { return container.data.begin(); }
+  template<class F, int Dimension> auto end(Matrix<F,Dimension>& container) { return container.data.end(); }
   
   
   template<class Matrix, class Vector>
@@ -126,13 +75,5 @@ namespace lma
     }
     return x;
   }
-}
-
-
-namespace lma
-{
-  constexpr auto pow(const auto& value, int i)
-  {
-    return (i==0) ? value : value * pow(value,i-1);
-  }
+  
 }

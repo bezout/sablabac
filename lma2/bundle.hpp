@@ -2,6 +2,7 @@
 
 #include "container.hpp"
 #include <map>
+#include <boost/function.hpp>
 
 namespace lma
 {
@@ -11,56 +12,66 @@ namespace lma
     static constexpr int NbInstanceOfFunctor = NbInstanceOfFunctor_;
     static constexpr int NbInstanceOfParameters = NbInstanceOfParameters_;
 
-    Container<Functor,NbInstanceOfFunctor> functors;
+    Container<std::pair<Functor,Parameters*>,NbInstanceOfFunctor> functors;
+    
     
     Container<Parameters*,NbInstanceOfParameters> parameters;
     Container<Parameters,NbInstanceOfParameters> save_parameters;
     
-    std::map<int,Parameters*> functor_map;
     std::set<Parameters*> parameters_set;
-    
+
     void add(const Functor& f, Parameters* p)
     {
-      functors.push_back(f);
+      functors.push_back(std::make_pair(f,p));
+      
       
       //TODO ADD F & P
       if (find(parameters_set.begin(),parameters_set.end(),p)==parameters_set.end())
       {
         parameters_set.insert(p);
-        parameters.push_back(p); // <-------
+        parameters.push_back(p);
       }
     }
     
     void update()
     {
+      parameters_set.clear();
       //TODO MAJ GRAPHE DE DONNEES
     }
     
     void update_parameters(const auto& deltas)
     {
-      loop(deltas, parameters,[](auto& delta, auto& p){ update_parameters(*p,delta.data()); });
+      for(size_t i = 0 ; i < parameters.size() ; ++i)
+        apply_increment(*parameters[i],deltas[i].data());
     }
     
     void save()
     {
-      loop(parameters,save_parameters,[](auto& p, auto& sp) { sp = *p; } );
+      save_parameters.resize(parameters.size());
+      for(size_t i = 0 ; i < parameters.size() ; ++ i)
+        save_parameters[i] = *parameters[i];
     }
 
     void restore()
     {
-      loop(save_parameters, parameters,[](auto& sp, auto& p) { *p = sp; } );
+      for(size_t i = 0 ; i < parameters.size() ; ++ i)
+        *parameters[i] = save_parameters[i];
     }
     
     void call_analytical(auto& jacobians) const
     {
-      loop(functors,parameters,jacobians,[&](auto& f, auto& p, auto& j) { f.analytical(*p,j); });
+      jacobians.resize(functors.size());
+      for(size_t i = 0 ; i < functors.size() ; ++i)
+        functors[i].first.analytical(*functors[i].second,jacobians[i]);
     }
     
     template<class CastResidual>
     int compute_error(auto& errors, const Type<CastResidual>&) const
     {
       int success = 0;
-      loop(functors,parameters,errors,[&](auto& f, auto& p, auto& e) {success += f(*p,CastResidual(e).data());});
+      errors.resize(functors.size());
+      for(size_t i = 0 ; i < functors.size() ; ++i)
+        success += functors[i].first(*functors[i].second,CastResidual(errors[i]).data());
       return success;
     }
   };

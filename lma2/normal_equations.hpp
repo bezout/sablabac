@@ -1,6 +1,7 @@
 #pragma once
 
 #include "container.hpp"
+#include "matrix.hpp"
 
 namespace lma
 {
@@ -21,17 +22,17 @@ namespace lma
     // dimension d'un bloc d'erreur
     static constexpr size_t NbError = size(Type<FunctorResidual>{});
     
-    using HessianBlock          = Matrix<Float,NbParameters,NbParameters>;
-    using JacobianBlock         = Matrix<Float,NbError,NbParameters>;
-    using DeltaBlock            = Matrix<Float,NbParameters,1>;
+    using HessianBlock          = Block<Float,NbParameters,NbParameters>;
+    using JacobianBlock         = Block<Float,NbError,NbParameters>;
+    using DeltaBlock            = Block<Float,NbParameters,1>;
     
-    using ResidualBlock = Matrix<Float,NbError,1>;
+    using ResidualBlock = Block<Float,NbError,1>;
     using FinalResidual = CastResidual<ResidualBlock,FunctorResidual>;
     
     //TODO  HESSIAN DENSE ?
     HessianBlock h;
     
-    Container<JacobianBlock,NbInstanceOfFunctor> j;
+    Matrix<JacobianBlock,NbInstanceOfFunctor> j;
     Container<ResidualBlock,NbInstanceOfFunctor> e;
 
     //TODO  VECTOR DENSE ?    

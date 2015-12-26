@@ -15,6 +15,8 @@ namespace lma
     void push_back(const F& f) { assert(last < Dimension); data[last] = f; ++last; }
     constexpr size_t size() const { return Dimension; }
     inline void resize(size_t) {}
+    const F& operator[](size_t i) const { assert( i < size() ); return data[i]; }
+    F& operator[](size_t i) { assert( i < size() ); return data[i]; }
   };
   
   template<class F>
@@ -24,6 +26,8 @@ namespace lma
     void push_back(const F& f) { data.push_back(f); }
     size_t size() const { return data.size(); }
     void resize(size_t s) { data.resize(s); }
+    const F& operator[](size_t i) const { assert( i < size() ); return data[i]; }
+    F& operator[](size_t i) { assert( i < size() ); return data[i]; }
   };
   
   template<class F, int Dimension> auto begin(const Container<F,Dimension>& container) { return container.data.begin(); }
