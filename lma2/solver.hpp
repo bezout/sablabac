@@ -69,7 +69,7 @@ namespace lma
         if (!lm.is_better())
           bundle.restore();
         
-        verbose.at_end_bundle_adjustment_iteration(*this,lm);
+        verbose.at_end_bundle_adjustment_iteration(*this,lm,normal_equation);
         
       } while (!lm.stop());
       

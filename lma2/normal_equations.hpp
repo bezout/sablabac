@@ -35,9 +35,9 @@ namespace lma
     using Delta = Vector<DeltaBlock,NbInstanceOfParameters>;
     using JTE = Vector<DeltaBlock,NbInstanceOfParameters>;
     
-    Jacobian j;
-    Vector<ResidualBlock,NbInstanceOfFunctor> e;
-    Hessian h;
+    Jacobian jacobian;
+    Vector<ResidualBlock,NbInstanceOfFunctor> residuals;
+    Hessian hessian;
     Delta delta;
     JTE jte;
 
@@ -51,18 +51,18 @@ namespace lma
 
     void resize(const auto& bundle)
     {
-      j.resize(bundle.total_errors(),bundle.total_parameters());
-      h.resize(bundle.total_parameters(),bundle.total_parameters());
+      jacobian.resize(bundle.total_errors(),bundle.total_parameters());
+      hessian.resize(bundle.total_parameters(),bundle.total_parameters());
       delta.resize(bundle.total_parameters());
       jte.resize(bundle.total_parameters());
-      e.resize(bundle.total_errors());
+      residuals.resize(bundle.total_errors());
     }
 
     std::pair<Float,int> compute_error(const auto& bundle)
     {
-      int success = bundle.compute_error(e, Type<FinalResidual>{});
+      int success = bundle.compute_error(residuals, Type<FinalResidual>{});
       Float total_error = 0;
-      total_error += squared_norm(e);
+      total_error += squared_norm(residuals);
       return {total_error/2.0,success};
     }
 
@@ -81,12 +81,12 @@ namespace lma
 
       void compute_jacobian(const auto& bundle)
       {
-        bundle.call_analytical(j);
+        bundle.call_analytical(jacobian);
       }
 
       Delta& solve_delta(const auto& lm)
       {
-        delta = llt(damping(h = j.transpose() * j, lm.lambda), jte = -j.transpose() * e, h.cols());
+        delta = llt(damping(hessian = jacobian.transpose() * jacobian, lm.lambda), jte = -jacobian.transpose() * residuals, hessian.cols());
         return delta;
       }
   };

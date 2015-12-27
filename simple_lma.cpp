@@ -13,11 +13,13 @@ template<class Float> void resize(Eigen::Matrix<Float,1,Eigen::Dynamic>& mat, si
 
 struct Rosenbrock
 {
+  double sigma;
   bool operator()(const Parameters& p, double& r) const
   {
     auto& x = p.x;
     auto& y = p.y;
     r = (1.0 - x) * (1.0 - x) + 100.0 * (y - x * x) * (y - x * x);
+    r *= sigma;
     return true;
   }
 
@@ -28,6 +30,7 @@ struct Rosenbrock
     auto& y = p.y;
     mat(0,0) = -2.0 * (1.0 - x) - 200.0 * (y - x * x) * 2.0 * x;
     mat(0,1) = 200.0 * (y - x * x);
+    mat *= sigma;
   }
 };
 
@@ -62,30 +65,32 @@ namespace lma
 
 
 
-void test_static(auto lm)
+void test_static(auto lm, auto verbose)
 {
   Parameters parameters {0.9,0.9};
-  Solver<Rosenbrock>::SetNbInstanceOfFunctors<2>::type::SetNbInstanceOfParameters<1>::type()
-    .add(Rosenbrock{},&parameters)
-    .add(Rosenbrock{},&parameters)
-    .solve(lm,Verbose{});
+  Solver<Rosenbrock>::SetNbInstanceOfFunctors<3>::type::SetNbInstanceOfParameters<1>::type()
+    .add(Rosenbrock{1},&parameters)
+    .add(Rosenbrock{2},&parameters)
+    .add(Rosenbrock{3},&parameters)
+    .solve(lm,verbose);
 }
 
-void test_dynamic(auto lm)
+void test_dynamic(auto lm, auto verbose)
 {
   Parameters parameters {0.9,0.9};
   Solver<Rosenbrock>()
-    .add(Rosenbrock{},&parameters)
-    .add(Rosenbrock{},&parameters)
-    .solve(lm,Verbose{});
+    .add(Rosenbrock{1},&parameters)
+    .add(Rosenbrock{2},&parameters)
+    .add(Rosenbrock{3},&parameters)
+    .solve(lm,verbose);
 }
 
 int main()
 {
-  int nb_iteration = 15;
-  
-  test_static(LMN<double>{nb_iteration,1.});
-  test_dynamic(LMN<double>{nb_iteration,1.});
+  int nb_iteration = 2;
+  auto verbose = VerboseNormalEquation{};
+  test_static(LMN<double>{nb_iteration,1.},verbose);
+  test_dynamic(LMN<double>{nb_iteration,1.},verbose);
   
 /*
   test_static(LM<double>{nb_iteration,1.});
