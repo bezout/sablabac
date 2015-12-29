@@ -11,12 +11,14 @@ namespace lma
     using Block = Eigen::Matrix<Float,I,J>;
   };
   
+  
   template<class Float> struct CreateBlock<Float,1,1>
   {
     using Block = Float;
   };
   
-  template<class Float, int J> struct CreateBlock<Float,0,J>
+  /*
+  template<class Float, int J> struct CreateBlock<Float,-1,J>
   {
     using Block = Eigen::Matrix<Float,Eigen::Dynamic,J>;
   };
@@ -30,7 +32,7 @@ namespace lma
   {
     using Block = Eigen::Matrix<Float,Eigen::Dynamic,Eigen::Dynamic>;
   };  
-  
+  */
   template<class Float, int I, int J> 
   using Block = typename CreateBlock<Float,I,J>::Block;
 
@@ -90,7 +92,6 @@ namespace lma
       return std::string("Eigen::Matrix<") + lma::name<Float>() + "," + (I==-1?"Dynamic":std::to_string(I)) + "," + (J==-1?"Dynamic":std::to_string(J)) + ">";
     }
   };
-
 }
 
 

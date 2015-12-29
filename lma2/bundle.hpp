@@ -80,7 +80,9 @@ namespace lma
     {
       int success = 0;
       for(size_t i = 0 ; i < functors.size() ; ++i)
-        success += functors[i].first(*functors[i].second,CastResidual(errors[i]).data());
+      {
+        success += functors[i].first(*functors[i].second,CastResidual(errors(i)).data());
+      }
       return success;
     }
   };

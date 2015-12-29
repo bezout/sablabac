@@ -11,19 +11,34 @@ namespace lma
   
   template<class Block, int Dimension> struct CreateMatrix
   {
-    using Matrix = Eigen::MatrixXd;
+    using Float = typename Block::Scalar;
+    using Matrix = Eigen::Matrix<Float,Eigen::Dynamic,Eigen::Dynamic>;
   };
   
   template<class Block, int Dimension>
   using Matrix = typename CreateMatrix<Block,Dimension>::Matrix;
   
+  
   template<class Block, int Dimension> struct CreateVector
   {
-    using Vector = Eigen::VectorXd;
+    using Float = typename Block::Scalar;
+    using Vector = Eigen::Matrix<Float,Eigen::Dynamic,1>;
+  };
+
+  template<int Dimension> struct CreateVector<float,Dimension>
+  {
+    using Vector = Eigen::Matrix<float,Eigen::Dynamic,1>;
   };
   
+  template<int Dimension> struct CreateVector<double,Dimension>
+  {
+    using Vector = Eigen::Matrix<double,Eigen::Dynamic,1>;
+  };
+    
   template<class Block, int Dimension>
   using Vector = typename CreateVector<Block,Dimension>::Vector;
+  
+  
   
   template<class Mat, class Float>
   Mat& damping(Mat& mat, const Float& lambda)

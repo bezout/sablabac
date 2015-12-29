@@ -88,7 +88,9 @@ void test_dynamic(auto lm, auto verbose)
 int main()
 {
   int nb_iteration = 2;
-  auto verbose = VerboseNormalEquation{};
+  //auto verbose = VerboseNormalEquation{};
+  auto verbose = Verbose{};
+  test_static(LMN<float>{nb_iteration,1.f},verbose);
   test_static(LMN<double>{nb_iteration,1.},verbose);
   test_dynamic(LMN<double>{nb_iteration,1.},verbose);
   

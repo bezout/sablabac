@@ -26,8 +26,8 @@ namespace lma
     using JacobianBlock         = Block<Float,NbError,NbParameters>;
     using DeltaBlock            = Block<Float,NbParameters,1>;
     
-    using ResidualBlock = Block<Float,NbError,1>;
-    using FinalResidual = CastResidual<ResidualBlock,FunctorResidual>;
+    using ResidualBlock         = Block<Float,NbError,1>;
+    using FinalResidual         = CastResidual<ResidualBlock,FunctorResidual>;
     
     using Hessian = Matrix<HessianBlock,NbInstanceOfParameters>;
     using Jacobian = Matrix<JacobianBlock,NbInstanceOfFunctor>;
