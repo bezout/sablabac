@@ -113,11 +113,15 @@ int main()
 
 /*
  *  PLAN :
+ *   TOUT FAIRE EN DENSE
  *   avec n/m statique ou dynamique
  *   1 : n instances d'1 type d'erreur pour 1 instance d'1 type de paramètre
  *   2 : n instances d'1 type d'erreur pour m instances d'1 type de paramètre
  *   3 : n[...] instances de N types d'erreur pour m instances d'1 type de paramètre
  *   4 : n[...] instances de N types d'erreur pour m[...] instances de M types de paramètre
+ * 
+ *   PUIS EN EPARSE
+ * 
  * 
  * update_policy ?
  */

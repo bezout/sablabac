@@ -35,8 +35,11 @@ namespace lma
     using Delta = Vector<DeltaBlock,NbInstanceOfParameters>;
     using JTE = Vector<DeltaBlock,NbInstanceOfParameters>;
     
+    using Residuals = Vector<ResidualBlock,NbInstanceOfFunctor>;
+    
+    
     Jacobian jacobian;
-    Vector<ResidualBlock,NbInstanceOfFunctor> residuals;
+    Residuals residuals;
     Hessian hessian;
     Delta delta;
     JTE jte;
