@@ -14,7 +14,7 @@ struct RangeIndex
     int index;
     bool operator!=(const RangeIndexIterator& rg_it) const { return rg_it.index != index; }
     void operator++() { index++; }
-    auto& operator*() { return index; }
+    int operator*() const { return index; }
   };
     
   RangeIndexIterator begin() { return RangeIndexIterator{begin_index}; }
@@ -94,6 +94,7 @@ struct MyVector
   MyVector& operator=(const MyVector& mv)
   {
     v = mv.v;
+    nb_copy++;
     return *this;
   }
   ~MyVector()
